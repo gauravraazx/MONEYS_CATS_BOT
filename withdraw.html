@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <title>Withdraw — CATS</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{
+      --bg: var(--tg-theme-bg-color,#0a0a0f);
+      --fg: var(--tg-theme-text-color,#fff);
+      --card: var(--tg-theme-secondary-bg-color,#1a1a24);
+      --accent: var(--tg-theme-button-color,#8b5cf6);
+      --accent-text: var(--tg-theme-button-text-color,#fff);
+      --sep: var(--tg-theme-section-separator-color,#2a2a3a);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --nav-offset: 100px;
+      --wrap-max: 480px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;overflow-x:hidden;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,sans-serif;
+      background:linear-gradient(180deg, var(--bg) 0%, #1a0a2e 100%);
+      color:var(--fg);
+      padding-bottom: var(--nav-offset);
+    }
+    .wrap{max-width:var(--wrap-max);margin:0 auto;padding:20px 16px}
+    
+    .header{
+      text-align:center;margin-bottom:24px;padding:20px 16px;
+      background:linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(59,130,246,0.1) 100%);
+      border-radius:20px;border:1px solid rgba(139,92,246,0.2);
+      position:relative;
+    }
+    .header h1{font-size:20px;font-weight:800;letter-spacing:2px;margin-bottom:8px;
+      background:linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .header p{font-size:13px;opacity:0.7}
+    
+    .menu-btn{
+      position:absolute;top:20px;right:20px;background:rgba(139,92,246,0.2);
+      border:1px solid rgba(139,92,246,0.4);border-radius:10px;padding:8px 12px;
+      cursor:pointer;transition:all 0.3s ease;
+    }
+    .menu-btn:hover{background:rgba(139,92,246,0.3);transform:scale(1.05)}
+    .menu-icon{width:20px;height:14px;display:flex;flex-direction:column;justify-content:space-between}
+    .menu-icon span{display:block;height:2px;background:var(--fg);border-radius:2px}
+
+    .menu-dropdown{
+      position:absolute;top:60px;right:20px;background:var(--card);
+      border:1px solid rgba(139,92,246,0.4);border-radius:12px;padding:12px;
+      min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+      display:none;z-index:1000;
+    }
+    .menu-dropdown.active{display:block;animation:slideDown 0.3s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)}}
+    .menu-title{font-size:12px;opacity:0.6;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+    .menu-item{padding:10px;border-radius:8px;margin-bottom:4px;cursor:pointer;
+      transition:all 0.2s ease;display:flex;align-items:center;gap:8px;
+    }
+    .menu-item:hover{background:rgba(139,92,246,0.2)}
+    .menu-item span{font-size:14px;font-weight:600}
+
+    .balance-card{
+      background:linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(59,130,246,0.15) 100%);
+      border-radius:20px;padding:24px;margin-bottom:20px;
+      box-shadow:0 8px 32px rgba(139,92,246,0.2), 0 2px 0 0 rgba(255,255,255,.05) inset;
+      border:1px solid rgba(139,92,246,0.3);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .balance-left{
+      flex:1;
+    }
+    .balance-label{font-size:14px;opacity:0.8;margin-bottom:8px}
+    .balance-amount{font-size:36px;font-weight:900;letter-spacing:1px;
+      background:linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .balance-currency{font-size:18px;margin-left:8px;opacity:0.9}
+    .balance-right{
+      text-align:right;
+      padding:12px 16px;
+      background:rgba(16,185,129,0.1);
+      border:1px solid rgba(16,185,129,0.3);
+      border-radius:12px;
+    }
+    .balance-ton-label{
+      font-size:11px;
+      opacity:0.7;
+      margin-bottom:4px;
+    }
+    .balance-ton-amount{
+      font-size:20px;
+      font-weight:800;
+      color:var(--success);
+      display:flex;
+      align-items:center;
+      gap:4px;
+      justify-content:flex-end;
+    }
+    .balance-ton-icon{font-size:18px}
+
+    .withdraw-card{
+      background:rgba(26,26,36,0.8);backdrop-filter:blur(10px);
+      border-radius:16px;padding:20px;margin-bottom:20px;
+      border:1px solid rgba(139,92,246,0.2);
+    }
+    .form-title{font-weight:800;font-size:17px;margin-bottom:16px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .form-group{margin-bottom:16px}
+    .form-label{font-size:13px;opacity:0.8;margin-bottom:8px;display:block}
+    .form-input{
+      width:100%;padding:14px;border-radius:12px;border:1px solid rgba(139,92,246,0.3);
+      background:rgba(0,0,0,0.3);color:var(--fg);outline:none;font-size:14px;
+      transition:all 0.3s ease;font-family:monospace;
+    }
+    .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,0.1)}
+    .form-hint{font-size:12px;opacity:0.6;margin-top:6px}
+    .min-amount{
+      background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);
+      padding:12px;border-radius:10px;margin-bottom:16px;
+    }
+    .min-amount-text{font-size:13px;color:var(--warning);font-weight:600}
+
+    .ton-conversion{
+      background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
+      padding:12px;border-radius:10px;margin-top:8px;
+      display:none;
+    }
+    .ton-conversion.show{display:block}
+    .ton-conversion-text{
+      font-size:14px;color:var(--success);font-weight:700;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .ton-icon{font-size:18px}
+
+    .btn{
+      width:100%;padding:16px;border:0;border-radius:14px;
+      background:linear-gradient(135deg, var(--accent) 0%, #6d28d9 100%);
+      color:var(--accent-text);font-weight:700;font-size:15px;cursor:pointer;
+      transition:all 0.3s ease;box-shadow:0 4px 20px rgba(139,92,246,0.4);
+    }
+    .btn:active{transform:translateY(2px);box-shadow:0 2px 10px rgba(139,92,246,0.3)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed;background:linear-gradient(135deg, #555 0%, #333 100%)}
+
+    .line{height:1px;background:linear-gradient(90deg, transparent 0%, var(--sep) 50%, transparent 100%);margin:24px 0}
+
+    .history-header{
+      font-weight:800;font-size:17px;margin-bottom:16px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .history-item{
+      background:rgba(26,26,36,0.8);border-radius:12px;padding:16px;
+      margin-bottom:12px;border:1px solid rgba(139,92,246,0.2);
+    }
+    .history-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .history-address{font-family:monospace;font-size:12px;opacity:0.8;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;
+    }
+    .history-amount{font-size:16px;font-weight:700;color:var(--success)}
+    .history-date{font-size:11px;opacity:0.6}
+    .history-status{
+      padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
+    }
+    .status-pending{background:rgba(245,158,11,0.2);color:var(--warning)}
+    .status-completed{background:rgba(16,185,129,0.2);color:var(--success)}
+    .status-failed{background:rgba(239,68,68,0.2);color:var(--danger)}
+    .history-empty{text-align:center;padding:40px 20px;opacity:0.5}
+
+    .nav{
+      position:fixed;z-index:1000;left:0;right:0;bottom:0;
+      background:rgba(26,26,36,0.95);backdrop-filter:blur(20px);
+      padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));
+      border-top:1px solid rgba(139,92,246,0.2);
+      box-shadow:0 -8px 32px rgba(0,0,0,0.5);
+    }
+    .nav-row{
+      max-width:var(--wrap-max);margin:0 auto;display:flex;gap:10px;
+      height:70px;align-items:center;
+    }
+    .tab{
+      flex:1;text-align:center;padding:12px;border-radius:14px;
+      background:rgba(0,0,0,0.3);color:var(--fg);font-weight:600;font-size:13px;
+      cursor:pointer;user-select:none;transition:all 0.3s ease;
+      border:1px solid transparent;
+    }
+    .tab.active{
+      background:linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(59,130,246,0.3) 100%);
+      border-color:rgba(139,92,246,0.5);
+      box-shadow:0 4px 16px rgba(139,92,246,0.3);
+    }
+    .tab:active{transform:scale(0.95)}
+
+    @media (max-width: 400px) {
+      .balance-card{flex-direction:column;align-items:flex-start;gap:16px}
+      .balance-right{width:100%;text-align:center}
+      .balance-ton-amount{justify-content:center}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>💳 WITHDRAW</h1>
+      <p>Transfer CATS to TON Wallet</p>
+      
+      <div class="menu-btn" id="menuBtn">
+        <div class="menu-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <div class="menu-dropdown" id="menuDropdown">
+        <div class="menu-title">Contact Us</div>
+        <div class="menu-item" data-user="@GTXjamil">
+          <span>👑</span>
+          <span>Owner: @GTXjamil</span>
+        </div>
+        <div class="menu-item" data-user="@OWNER_DAAKU">
+          <span>💻</span>
+          <span>Developer: @OWNER_DAAKU</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-left">
+        <div class="balance-label">Available Balance</div>
+        <div>
+          <span class="balance-amount" id="balance">0</span>
+          <span class="balance-currency">CATS</span>
+        </div>
+      </div>
+      <div class="balance-right">
+        <div class="balance-ton-label">≈ TON</div>
+        <div class="balance-ton-amount">
+          <span class="balance-ton-icon">💎</span>
+          <span id="balanceTon">0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="withdraw-card">
+      <div class="form-title">
+        <span>🔐</span>
+        <span>Withdraw to TON</span>
+      </div>
+
+      <div class="min-amount">
+        <div class="min-amount-text">⚠️ Minimum withdrawal: 100,000 CATS</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">TON Wallet Address</label>
+        <input 
+          type="text" 
+          class="form-input" 
+          id="tonAddress" 
+          placeholder="UQCx...your_ton_address"
+          autocomplete="off"
+        />
+        <div class="form-hint">Enter your TON wallet address</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Amount (CATS)</label>
+        <input 
+          type="number" 
+          class="form-input" 
+          id="amount" 
+          placeholder="100000"
+          min="100000"
+        />
+        <div class="form-hint">Minimum: 100,000 CATS</div>
+        
+        <div class="ton-conversion" id="tonConversion">
+          <div class="ton-conversion-text">
+            <span id="catsAmount">0</span>
+            <span>≈</span>
+            <span class="ton-icon">💎</span>
+            <span id="tonAmount">0.00</span>
+            <span>TON</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" id="withdrawBtn">Withdraw CATS</button>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="history-header">
+      <span>📜</span>
+      <span>Withdrawal History</span>
+    </div>
+    
+    <div id="historyContainer">
+      <div class="history-empty">
+        <div style="font-size:48px;margin-bottom:16px">📭</div>
+        <div>No withdrawal history yet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-row">
+      <div class="tab" id="tabEarn">💰 Earn</div>
+      <div class="tab" id="tabWatch">📺 Watch</div>
+      <div class="tab active" id="tabWithdraw">💳 Withdraw</div>
+    </div>
+  </div>
+
+  <script type="module">
+    const tg = window.Telegram && window.Telegram.WebApp;
+    try{
+      tg && tg.ready();
+      tg && tg.expand();
+      if(tg && tg.setHeaderColor) tg.setHeaderColor('secondary_bg_color');
+      if(tg && tg.setBackgroundColor) tg.setBackgroundColor('secondary_bg_color');
+    }catch(e){}
+
+    // Prevent bottom overlap
+    const navEl = document.querySelector('.nav');
+    function applyNavOffset(){
+      const h = navEl ? navEl.offsetHeight : 100;
+      document.documentElement.style.setProperty('--nav-offset', h + 'px');
+    }
+    applyNavOffset();
+    window.addEventListener('resize', applyNavOffset);
+    try{
+      tg && tg.onEvent && tg.onEvent('viewportChanged', applyNavOffset);
+    }catch(e){}
+
+    // Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
+    import {
+      getDatabase, ref, runTransaction, serverTimestamp, onValue, push, set
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVsbQ5GUkz5SIXy2Fp3Q6SPyv2peFhnK8",
+      authDomain: "moneys-cats-bot.firebaseapp.com",
+      databaseURL: "https://moneys-cats-bot-default-rtdb.firebaseio.com",
+      projectId: "moneys-cats-bot",
+      storageBucket: "moneys-cats-bot.firebasestorage.app",
+      messagingSenderId: "94689984727",
+      appId: "1:94689984727:web:d4ef7757c6521ac2733092",
+      measurementId: "G-B2D4Y2MQ5Z"
+    };
+    const app = initializeApp(firebaseConfig);
+    try { getAnalytics(app); } catch(e) {}
+    const db = getDatabase(app);
+
+    const UID = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id)
+      ? String(tg.initDataUnsafe.user.id)
+      : 'NOT_APP';
+
+    const MIN_WITHDRAW = 100000;
+    const CATS_TO_TON_RATE = 1000000; // 1 TON = 10,000,00 CATS
+
+    const balanceEl = document.getElementById('balance');
+    const balanceTonEl = document.getElementById('balanceTon');
+    const tonAddressInput = document.getElementById('tonAddress');
+    const amountInput = document.getElementById('amount');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const historyContainer = document.getElementById('historyContainer');
+    const menuBtn = document.getElementById('menuBtn');
+    const menuDropdown = document.getElementById('menuDropdown');
+    const tonConversion = document.getElementById('tonConversion');
+    const catsAmountEl = document.getElementById('catsAmount');
+    const tonAmountEl = document.getElementById('tonAmount');
+
+    const toInt = (v,d=0) => Number.parseInt(v??d,10)||d;
+
+    function toast(msg,ok=true){
+      try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(ok?'success':'error'); }catch(e){}
+      try{ if(tg && tg.showPopup){ tg.showPopup({title: ok?'✅ Success':'❌ Error', message: msg, buttons:[{type:'close'}]}); return; } }catch(e){}
+      try{ alert(msg); }catch(e){}
+    }
+
+    const userRef = ref(db, `users/${UID}`);
+    const withdrawalsRef = ref(db, `withdrawals/${UID}`);
+
+    let currentBalance = 0;
+
+    // Convert CATS to TON
+    function convertCatsToTon(cats){
+      return (cats / CATS_TO_TON_RATE).toFixed(4);
+    }
+
+    // Load balance from Firebase
+    onValue(ref(db, `users/${UID}/balance`), (snap)=>{
+      currentBalance = toInt(snap.val(), 0);
+      balanceEl.textContent = currentBalance.toLocaleString();
+      balanceTonEl.textContent = convertCatsToTon(currentBalance);
+    });
+
+    // Amount input listener
+    amountInput.addEventListener('input', ()=>{
+      const amount = toInt(amountInput.value, 0);
+      if(amount > 0){
+        const tonValue = convertCatsToTon(amount);
+        catsAmountEl.textContent = amount.toLocaleString();
+        tonAmountEl.textContent = tonValue;
+        tonConversion.classList.add('show');
+      } else {
+        tonConversion.classList.remove('show');
+      }
+    });
+
+    // Load withdrawal history
+    function renderHistory(){
+      onValue(withdrawalsRef, (snap)=>{
+        const history = snap.val();
+        
+        if(!history || Object.keys(history).length === 0){
+          historyContainer.innerHTML = `
+            <div class="history-empty">
+              <div style="font-size:48px;margin-bottom:16px">📭</div>
+              <div>No withdrawal history yet</div>
+            </div>
+          `;
+          return;
+        }
+
+        const items = Object.entries(history).map(([key, item]) => ({...item, key}))
+          .sort((a,b) => b.timestamp - a.timestamp);
+
+        historyContainer.innerHTML = items.map(item => {
+          const statusClass = `status-${item.status}`;
+          const statusText = item.status === 'pending' ? '⏳ Pending' : 
+                            item.status === 'completed' ? '✅ Completed' : 
+                            '❌ Failed';
+          
+          return `
+            <div class="history-item">
+              <div class="history-row">
+                <div class="history-address" title="${item.address}">${item.address}</div>
+                <div class="history-status ${statusClass}">${statusText}</div>
+              </div>
+              <div class="history-row">
+                <div class="history-amount">-${item.amount.toLocaleString()} CATS (≈ ${item.ton_amount} TON)</div>
+                <div class="history-date">${new Date(item.timestamp).toLocaleString()}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      });
+    }
+
+    // Menu Toggle
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menuDropdown.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!menuDropdown.contains(e.target) && e.target !== menuBtn){
+        menuDropdown.classList.remove('active');
+      }
+    });
+
+    // Menu items click
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const username = item.getAttribute('data-user');
+        try{
+          if(tg && tg.openTelegramLink){
+            tg.openTelegramLink('https://t.me/' + username.substring(1));
+          } else {
+            window.open('https://t.me/' + username.substring(1), '_blank');
+          }
+        }catch(e){
+          toast('Opening: ' + username);
+        }
+      });
+    });
+
+    // Withdraw Button
+    withdrawBtn.addEventListener('click', async () => {
+      const address = tonAddressInput.value.trim();
+      const amount = toInt(amountInput.value, 0);
+
+      // Validation
+      if(!address){
+        toast('❌ Please enter TON wallet address', false);
+        return;
+      }
+
+      if(address.length < 20){
+        toast('❌ Invalid TON wallet address', false);
+        return;
+      }
+
+      if(amount < MIN_WITHDRAW){
+        toast(`❌ Minimum withdrawal is ${MIN_WITHDRAW.toLocaleString()} CATS`, false);
+        return;
+      }
+
+      if(amount > currentBalance){
+        toast('❌ Insufficient balance', false);
+        return;
+      }
+
+      withdrawBtn.disabled = true;
+      const prevText = withdrawBtn.textContent;
+      withdrawBtn.textContent = '⏳ Processing...';
+
+      try{
+        // Deduct balance atomically
+        let success = false;
+        await runTransaction(ref(db, `users/${UID}/balance`), (bal)=>{
+          bal = toInt(bal, 0);
+          if(bal < amount) return bal;
+          success = true;
+          return bal - amount;
+        });
+
+        if(!success){
+          throw new Error('Insufficient balance');
+        }
+
+        // Add to withdrawal history
+        const withdrawalRef = push(withdrawalsRef);
+        await set(withdrawalRef, {
+          address: address,
+          amount: amount,
+          ton_amount: convertCatsToTon(amount),
+          status: 'pending',
+          timestamp: Date.now(),
+          created_at: serverTimestamp()
+        });
+
+        tonAddressInput.value = '';
+        amountInput.value = '';
+        tonConversion.classList.remove('show');
+
+        if(tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        toast(`🎉 Withdrawal request submitted!\n${amount.toLocaleString()} CATS (≈ ${convertCatsToTon(amount)} TON) will be transferred soon.`);
+
+      } catch(e) {
+        console.error('Withdrawal error:', e);
+        toast('❌ Withdrawal failed. Please try again.', false);
+      } finally {
+        withdrawBtn.textContent = prevText;
+        withdrawBtn.disabled = false;
+      }
+    });
+
+    // Navigation
+    document.getElementById('tabEarn').addEventListener('click',()=>{ location.href='index.html'; });
+    document.getElementById('tabWatch').addEventListener('click',()=>{ location.href='watch.html'; });
+    document.getElementById('tabWithdraw').addEventListener('click',()=>{});
+
+    // Initialize
+    renderHistory();
+  </script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <title>Watch — CATS</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://ad.gigapub.tech/script?id=3723"></script>
+  <style>
+    :root{
+      --bg: var(--tg-theme-bg-color,#0a0a0f);
+      --fg: var(--tg-theme-text-color,#fff);
+      --card: var(--tg-theme-secondary-bg-color,#1a1a24);
+      --accent: var(--tg-theme-button-color,#8b5cf6);
+      --accent-text: var(--tg-theme-button-text-color,#fff);
+      --sep: var(--tg-theme-section-separator-color,#2a2a3a);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --nav-offset: 100px;
+      --wrap-max: 480px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;overflow-x:hidden;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,sans-serif;
+      background:linear-gradient(180deg, var(--bg) 0%, #1a0a2e 100%);
+      color:var(--fg);
+      padding-bottom: var(--nav-offset);
+    }
+    .wrap{max-width:var(--wrap-max);margin:0 auto;padding:20px 16px 40px 16px}
+    
+    .header{
+      text-align:center;margin-bottom:24px;padding:20px 0;
+      background:linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(59,130,246,0.1) 100%);
+      border-radius:20px;border:1px solid rgba(139,92,246,0.2);
+    }
+    .header h1{font-size:20px;font-weight:800;letter-spacing:2px;margin-bottom:8px;
+      background:linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .header p{font-size:13px;opacity:0.7}
+
+    .summary-card{
+      background:linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.15) 100%);
+      border-radius:20px;padding:24px;margin-bottom:24px;
+      box-shadow:0 8px 32px rgba(16,185,129,0.2), 0 2px 0 0 rgba(255,255,255,.05) inset;
+      border:1px solid rgba(16,185,129,0.3);
+    }
+    .summary-title{font-size:14px;opacity:0.8;margin-bottom:16px;text-align:center;font-weight:600}
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .summary-item{text-align:center}
+    .summary-value{font-size:24px;font-weight:800;color:var(--success);margin-bottom:4px}
+    .summary-label{font-size:11px;opacity:0.7}
+
+    .ad-zone{
+      background:rgba(26,26,36,0.8);backdrop-filter:blur(10px);
+      border-radius:16px;padding:20px;margin-bottom:20px;
+      border:1px solid rgba(139,92,246,0.2);
+      transition:all 0.3s ease;
+    }
+    .ad-zone:hover{
+      border-color:rgba(139,92,246,0.5);
+      box-shadow:0 8px 24px rgba(139,92,246,0.2);
+      transform:translateY(-2px);
+    }
+    .ad-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .ad-title{font-weight:800;font-size:17px;display:flex;align-items:center;gap:8px}
+    .ad-badge{
+      background:linear-gradient(135deg, var(--success) 0%, #059669 100%);
+      padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+      box-shadow:0 2px 8px rgba(16,185,129,0.3);
+    }
+    .ad-info{margin-bottom:16px}
+    .ad-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px}
+    .ad-label{opacity:0.7}
+    .ad-value{font-weight:700}
+    .ad-value.limit-low{color:var(--warning)}
+    .ad-value.limit-ok{color:var(--success)}
+    
+    .progress-bar{
+      height:8px;background:rgba(0,0,0,0.3);border-radius:10px;overflow:hidden;margin-bottom:16px;
+    }
+    .progress-fill{
+      height:100%;background:linear-gradient(90deg, var(--success) 0%, #059669 100%);
+      transition:width 0.3s ease;border-radius:10px;
+      box-shadow:0 0 10px rgba(16,185,129,0.5);
+    }
+
+    .btn{
+      width:100%;padding:16px;border:0;border-radius:14px;
+      background:linear-gradient(135deg, var(--accent) 0%, #6d28d9 100%);
+      color:var(--accent-text);font-weight:700;font-size:15px;cursor:pointer;
+      transition:all 0.3s ease;box-shadow:0 4px 20px rgba(139,92,246,0.4);
+      position:relative;overflow:hidden;
+    }
+    .btn:active{transform:translateY(2px);box-shadow:0 2px 10px rgba(139,92,246,0.3)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed;background:linear-gradient(135deg, #555 0%, #333 100%)}
+
+    .line{height:1px;background:linear-gradient(90deg, transparent 0%, var(--sep) 50%, transparent 100%);margin:24px 0}
+
+    .nav{
+      position:fixed;z-index:1000;left:0;right:0;bottom:0;
+      background:rgba(26,26,36,0.95);backdrop-filter:blur(20px);
+      padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));
+      border-top:1px solid rgba(139,92,246,0.2);
+      box-shadow:0 -8px 32px rgba(0,0,0,0.5);
+    }
+    .nav-row{
+      max-width:var(--wrap-max);margin:0 auto;display:flex;gap:10px;
+      height:70px;align-items:center;
+    }
+    .tab{
+      flex:1;text-align:center;padding:12px;border-radius:14px;
+      background:rgba(0,0,0,0.3);color:var(--fg);font-weight:600;font-size:13px;
+      cursor:pointer;user-select:none;transition:all 0.3s ease;
+      border:1px solid transparent;
+    }
+    .tab.active{
+      background:linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(59,130,246,0.3) 100%);
+      border-color:rgba(139,92,246,0.5);
+      box-shadow:0 4px 16px rgba(139,92,246,0.3);
+    }
+    .tab:active{transform:scale(0.95)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>📺 WATCH & EARN</h1>
+      <p>Watch ads to earn CATS coins</p>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-title">📊 Today's Earning Summary</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value" id="summaryTotal">0</div>
+          <div class="summary-label">Total Earned</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="summaryAds">0</div>
+          <div class="summary-label">Ads Watched</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="summaryLeft">20</div>
+          <div class="summary-label">Ads Left</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-zone">
+      <div class="ad-header">
+        <div class="ad-title">
+          <span>🎬</span>
+          <span>Quick Ads</span>
+        </div>
+        <div class="ad-badge">+200 CATS</div>
+      </div>
+      <div class="ad-info">
+        <div class="ad-row">
+          <span class="ad-label">Reward per ad:</span>
+          <span class="ad-value">200 CATS</span>
+        </div>
+        <div class="ad-row">
+          <span class="ad-label">Daily Limit:</span>
+          <span class="ad-value limit-ok" id="zone1Limit">10/10</span>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="zone1Progress" style="width:0%"></div>
+      </div>
+      <button class="btn" id="zone1Btn">Watch Ad • +200 CATS</button>
+    </div>
+
+    <div class="ad-zone">
+      <div class="ad-header">
+        <div class="ad-title">
+          <span>🎥</span>
+          <span>Premium Ads</span>
+        </div>
+        <div class="ad-badge" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%)">+200 CATS</div>
+      </div>
+      <div class="ad-info">
+        <div class="ad-row">
+          <span class="ad-label">Reward per ad:</span>
+          <span class="ad-value">200 CATS</span>
+        </div>
+        <div class="ad-row">
+          <span class="ad-label">Daily Limit:</span>
+          <span class="ad-value limit-ok" id="zone2Limit">10/10</span>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="zone2Progress" style="width:0%"></div>
+      </div>
+      <button class="btn" id="zone2Btn">Watch Ad • +200 CATS</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-row">
+      <div class="tab" id="tabEarn">💰 Earn</div>
+      <div class="tab active" id="tabWatch">📺 Watch</div>
+      <div class="tab" id="tabWithdraw">💳 Withdraw</div>
+    </div>
+  </div>
+
+  <script type="module">
+    const tg = window.Telegram && window.Telegram.WebApp;
+    try{
+      tg && tg.ready();
+      tg && tg.expand();
+      if(tg && tg.setHeaderColor) tg.setHeaderColor('secondary_bg_color');
+      if(tg && tg.setBackgroundColor) tg.setBackgroundColor('secondary_bg_color');
+    }catch(e){}
+
+    // Prevent bottom overlap
+    const navEl = document.querySelector('.nav');
+    function applyNavOffset(){
+      const h = navEl ? navEl.offsetHeight : 100;
+      document.documentElement.style.setProperty('--nav-offset', h + 'px');
+    }
+    applyNavOffset();
+    window.addEventListener('resize', applyNavOffset);
+    try{
+      tg && tg.onEvent && tg.onEvent('viewportChanged', applyNavOffset);
+    }catch(e){}
+
+    // Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
+    import {
+      getDatabase, ref, runTransaction, serverTimestamp, onValue
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVsbQ5GUkz5SIXy2Fp3Q6SPyv2peFhnK8",
+      authDomain: "moneys-cats-bot.firebaseapp.com",
+      databaseURL: "https://moneys-cats-bot-default-rtdb.firebaseio.com",
+      projectId: "moneys-cats-bot",
+      storageBucket: "moneys-cats-bot.firebasestorage.app",
+      messagingSenderId: "94689984727",
+      appId: "1:94689984727:web:d4ef7757c6521ac2733092",
+      measurementId: "G-B2D4Y2MQ5Z"
+    };
+    const app = initializeApp(firebaseConfig);
+    try { getAnalytics(app); } catch(e) {}
+    const db = getDatabase(app);
+
+    const UID = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id)
+      ? String(tg.initDataUnsafe.user.id)
+      : 'NOT_APP';
+
+    const AD_REWARD = 200; // Fixed reward per ad
+
+    const zone1Btn = document.getElementById('zone1Btn');
+    const zone2Btn = document.getElementById('zone2Btn');
+    const zone1Limit = document.getElementById('zone1Limit');
+    const zone2Limit = document.getElementById('zone2Limit');
+    const zone1Progress = document.getElementById('zone1Progress');
+    const zone2Progress = document.getElementById('zone2Progress');
+    const summaryTotal = document.getElementById('summaryTotal');
+    const summaryAds = document.getElementById('summaryAds');
+    const summaryLeft = document.getElementById('summaryLeft');
+
+    const toInt=(v,d=0)=>Number.parseInt(v??d,10)||d;
+    const today=()=>new Date().toISOString().slice(0,10);
+
+    function toast(msg,ok=true){
+      try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(ok?'success':'error'); }catch(e){}
+      try{ if(tg && tg.showPopup){ tg.showPopup({title: ok?'✅ Success':'ℹ️ Notice', message: msg, buttons:[{type:'close'}]}); return; } }catch(e){}
+      try{ alert(msg); }catch(e){}
+    }
+
+    const userRef = ref(db, `users/${UID}`);
+
+    // Ensure user data exists
+    await runTransaction(userRef, (u)=>{
+      if(u) return u;
+      return {
+        balance: 0,
+        ad_zone1_count: 0,
+        ad_zone2_count: 0,
+        ad_zone1_date: "",
+        ad_zone2_date: "",
+        daily_ad_earned: 0,
+        daily_ad_date: "",
+        updated_at: serverTimestamp()
+      };
+    });
+
+    let userData = {};
+
+    function updateUI(u){
+      userData = u || {};
+      const t = today();
+
+      // Reset zone counts if new day
+      let zone1Count = toInt(u?.ad_zone1_count, 0);
+      let zone2Count = toInt(u?.ad_zone2_count, 0);
+      let dailyEarned = toInt(u?.daily_ad_earned, 0);
+
+      if(u?.ad_zone1_date !== t) zone1Count = 0;
+      if(u?.ad_zone2_date !== t) zone2Count = 0;
+      if(u?.daily_ad_date !== t) dailyEarned = 0;
+
+      const totalWatched = zone1Count + zone2Count;
+      const totalLeft = (10 - zone1Count) + (10 - zone2Count);
+
+      // Zone 1
+      zone1Limit.textContent = `${zone1Count}/10`;
+      zone1Progress.style.width = `${(zone1Count/10)*100}%`;
+      if(zone1Count >= 10){
+        zone1Btn.textContent = '✓ Limit Reached Today';
+        zone1Btn.disabled = true;
+        zone1Limit.classList.remove('limit-ok');
+        zone1Limit.classList.add('limit-low');
+      } else {
+        zone1Btn.textContent = `Watch Ad • +${AD_REWARD} CATS (${10-zone1Count} left)`;
+        zone1Btn.disabled = false;
+        zone1Limit.classList.add('limit-ok');
+        zone1Limit.classList.remove('limit-low');
+      }
+
+      // Zone 2
+      zone2Limit.textContent = `${zone2Count}/10`;
+      zone2Progress.style.width = `${(zone2Count/10)*100}%`;
+      if(zone2Count >= 10){
+        zone2Btn.textContent = '✓ Limit Reached Today';
+        zone2Btn.disabled = true;
+        zone2Limit.classList.remove('limit-ok');
+        zone2Limit.classList.add('limit-low');
+      } else {
+        zone2Btn.textContent = `Watch Ad • +${AD_REWARD} CATS (${10-zone2Count} left)`;
+        zone2Btn.disabled = false;
+        zone2Limit.classList.add('limit-ok');
+        zone2Limit.classList.remove('limit-low');
+      }
+
+      // Summary
+      summaryTotal.textContent = dailyEarned;
+      summaryAds.textContent = totalWatched;
+      summaryLeft.textContent = totalLeft;
+      
+      // Reapply nav offset after UI update
+      applyNavOffset();
+    }
+
+    onValue(userRef, (snap)=>{
+      updateUI(snap.val()||{});
+    });
+
+    async function watchAd(zone){
+      const btn = zone === 1 ? zone1Btn : zone2Btn;
+      btn.disabled = true;
+      const prevText = btn.textContent;
+      btn.textContent = '⏳ Loading Ad...';
+
+      try {
+        // Show GigaPub ad
+        await window.showGiga();
+        
+        // Ad watched successfully - award reward
+        const t = today();
+        let success = false;
+
+        await runTransaction(userRef, (u)=>{
+          u = u || {};
+          
+          const zone1Count = (u.ad_zone1_date === t) ? toInt(u.ad_zone1_count, 0) : 0;
+          const zone2Count = (u.ad_zone2_date === t) ? toInt(u.ad_zone2_count, 0) : 0;
+          const dailyEarned = (u.daily_ad_date === t) ? toInt(u.daily_ad_earned, 0) : 0;
+          
+          if(zone === 1 && zone1Count >= 10) return u;
+          if(zone === 2 && zone2Count >= 10) return u;
+
+          const bal = toInt(u.balance, 0);
+          success = true;
+
+          return {
+            ...u,
+            balance: bal + AD_REWARD,
+            ad_zone1_count: zone === 1 ? zone1Count + 1 : zone1Count,
+            ad_zone2_count: zone === 2 ? zone2Count + 1 : zone2Count,
+            ad_zone1_date: t,
+            ad_zone2_date: t,
+            daily_ad_earned: dailyEarned + AD_REWARD,
+            daily_ad_date: t,
+            updated_at: serverTimestamp()
+          };
+        });
+
+        if(success){
+          toast(`🎉 +${AD_REWARD} CATS earned!`);
+        } else {
+          toast('❌ Daily limit reached', false);
+        }
+
+      } catch(e) {
+        console.error('Ad error:', e);
+        toast('❌ Ad failed to load. Please try again.', false);
+        btn.textContent = prevText;
+        btn.disabled = false;
+      }
+    }
+
+    // Zone 1 Click
+    zone1Btn.addEventListener('click', async () => {
+      const t = today();
+      const zone1Count = (userData.ad_zone1_date === t) ? toInt(userData.ad_zone1_count, 0) : 0;
+      if(zone1Count >= 10){
+        toast('❌ Daily limit reached for Quick Ads', false);
+        return;
+      }
+      await watchAd(1);
+    });
+
+    // Zone 2 Click
+    zone2Btn.addEventListener('click', async () => {
+      const t = today();
+      const zone2Count = (userData.ad_zone2_date === t) ? toInt(userData.ad_zone2_count, 0) : 0;
+      if(zone2Count >= 10){
+        toast('❌ Daily limit reached for Premium Ads', false);
+        return;
+      }
+      await watchAd(2);
+    });
+
+    // Navigation
+    document.getElementById('tabEarn').addEventListener('click',()=>{ location.href='index.html'; });
+    document.getElementById('tabWatch').addEventListener('click',()=>{});
+    document.getElementById('tabWithdraw').addEventListener('click',()=>{ location.href='withdraw.html'; });
+  </script>
+</body>
+</html>
