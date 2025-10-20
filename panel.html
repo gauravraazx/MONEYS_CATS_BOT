@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <title>Admin Panel — CATS</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{
+      --bg: var(--tg-theme-bg-color,#0a0a0f);
+      --fg: var(--tg-theme-text-color,#fff);
+      --card: var(--tg-theme-secondary-bg-color,#1a1a24);
+      --accent: var(--tg-theme-button-color,#8b5cf6);
+      --accent-text: var(--tg-theme-button-text-color,#fff);
+      --sep: var(--tg-theme-section-separator-color,#2a2a3a);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --nav-offset: 100px;
+      --wrap-max: 800px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;overflow-x:hidden;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,sans-serif;
+      background:linear-gradient(180deg, var(--bg) 0%, #1a0a2e 100%);
+      color:var(--fg);
+      padding-bottom: var(--nav-offset);
+    }
+    .wrap{max-width:var(--wrap-max);margin:0 auto;padding:20px 16px}
+    
+    .header{
+      text-align:center;margin-bottom:24px;padding:20px 0;
+      background:linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(59,130,246,0.1) 100%);
+      border-radius:20px;border:1px solid rgba(139,92,246,0.2);
+    }
+    .header h1{font-size:24px;font-weight:800;letter-spacing:2px;margin-bottom:8px;
+      background:linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .header p{font-size:13px;opacity:0.7}
+
+    .tabs{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+    .tab-btn{flex:1;min-width:140px;padding:14px;border-radius:14px;border:0;background:rgba(26,26,36,0.6);color:var(--fg);font-weight:700;font-size:14px;cursor:pointer;transition:all .3s;border:1px solid rgba(139,92,246,0.2)}
+    .tab-btn.active{background:linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(59,130,246,0.3) 100%);border-color:rgba(139,92,246,0.5);box-shadow:0 4px 16px rgba(139,92,246,0.3)}
+    .tab-btn:active{transform:scale(0.98)}
+
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+    .stat-card{background:rgba(26,26,36,0.8);backdrop-filter:blur(10px);border-radius:12px;padding:14px;border:1px solid rgba(139,92,246,0.2);text-align:center}
+    .stat-value{font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px}
+    .stat-label{font-size:11px;opacity:0.7}
+
+    .section-title{font-size:18px;font-weight:800;margin:24px 0 16px;background:linear-gradient(135deg, #fff 0%, #a0a0a0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+    .request-card{background:rgba(26,26,36,0.8);backdrop-filter:blur(10px);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid rgba(139,92,246,0.2)}
+    .request-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:16px}
+    .request-info{flex:1}
+    .request-user{font-size:16px;font-weight:800;margin-bottom:8px;color:var(--accent)}
+    .request-address{font-family:monospace;font-size:12px;opacity:0.8;word-break:break-all;margin-bottom:8px}
+    .request-amount{font-size:20px;font-weight:800;color:var(--success);margin-bottom:4px}
+    .request-date{font-size:11px;opacity:0.6}
+    .request-actions{display:flex;gap:8px;flex-direction:column}
+    .btn-small{padding:10px 16px;border:0;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:all .3s;white-space:nowrap}
+    .btn-approve{background:linear-gradient(135deg, var(--success) 0%, #059669 100%);color:#fff;box-shadow:0 2px 12px rgba(16,185,129,0.3)}
+    .btn-reject{background:linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);color:#fff;box-shadow:0 2px 12px rgba(239,68,68,0.3)}
+    .btn-small:active{transform:scale(0.95)}
+
+    .history-card{background:rgba(26,26,36,0.8);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid rgba(139,92,246,0.2)}
+    .history-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+    .history-user{font-weight:700;color:var(--accent);font-size:14px}
+    .history-status{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+    .status-completed{background:rgba(16,185,129,0.2);color:var(--success)}
+    .status-rejected{background:rgba(239,68,68,0.2);color:var(--danger)}
+    .history-amount{font-size:14px;font-weight:700;color:var(--success)}
+    .history-date{font-size:11px;opacity:0.6}
+
+    .form-card{background:rgba(26,26,36,0.8);backdrop-filter:blur(10px);border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid rgba(139,92,246,0.2)}
+    .form-group{margin-bottom:16px}
+    .form-label{font-size:13px;opacity:0.8;margin-bottom:8px;display:block;font-weight:600}
+    .form-input{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(139,92,246,0.3);background:rgba(0,0,0,0.3);color:var(--fg);outline:none;font-size:14px;transition:all .3s}
+    .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,0.1)}
+    .form-hint{font-size:12px;opacity:0.6;margin-top:6px}
+    .btn{width:100%;padding:16px;border:0;border-radius:14px;background:linear-gradient(135deg, var(--accent) 0%, #6d28d9 100%);color:var(--accent-text);font-weight:700;font-size:15px;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(139,92,246,0.4)}
+    .btn:active{transform:translateY(2px);box-shadow:0 2px 10px rgba(139,92,246,0.3)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed;background:linear-gradient(135deg, #555 0%, #333 100%)}
+
+    .calc-box{background:rgba(16,185,129,0.1);border-radius:12px;padding:16px;margin-top:12px;border:1px solid rgba(16,185,129,0.3);display:flex;justify-content:space-between;align-items:center}
+    .calc-box.danger{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.35)}
+    .calc-box span{font-size:13px;opacity:0.9}
+    .calc-box strong{color:var(--success);font-size:16px}
+    .calc-box.danger strong{color:var(--danger)}
+
+    .promo-item{
+      background:rgba(139,92,246,0.08);
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:12px;
+      border:1px solid rgba(139,92,246,0.2);
+      transition:all .3s;
+    }
+    .promo-item:last-child{margin-bottom:0}
+    .promo-item.exhausted{
+      background:rgba(239,68,68,0.08);
+      border-color:rgba(239,68,68,0.3);
+    }
+    .promo-item.exhausted .promo-header{opacity:0.6}
+    .promo-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .promo-code-wrapper{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .promo-code{
+      font-weight:900;
+      letter-spacing:1px;
+      font-size:16px;
+      color:var(--accent);
+      font-family:'Courier New', monospace;
+    }
+    .promo-item.exhausted .promo-code{
+      color:var(--danger);
+    }
+    .copy-btn{
+      padding:6px 12px;
+      border-radius:8px;
+      border:0;
+      background:rgba(139,92,246,0.3);
+      color:var(--fg);
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .2s;
+    }
+    .copy-btn:active{
+      transform:scale(0.9);
+      background:rgba(139,92,246,0.5);
+    }
+    .promo-item.exhausted .copy-btn{
+      background:rgba(239,68,68,0.3);
+    }
+    .promo-status{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:6px;
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+    .promo-status.active{
+      background:rgba(16,185,129,0.2);
+      color:var(--success);
+    }
+    .promo-status.exhausted{
+      background:rgba(239,68,68,0.2);
+      color:var(--danger);
+    }
+    .promo-stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      font-size:13px;
+    }
+    .promo-stat{
+      background:rgba(0,0,0,0.3);
+      padding:8px 12px;
+      border-radius:8px;
+    }
+    .promo-stat-label{
+      opacity:0.7;
+      font-size:11px;
+      margin-bottom:2px;
+    }
+    .promo-stat-value{
+      font-weight:800;
+      font-size:14px;
+    }
+    .promo-progress{
+      margin-top:12px;
+      height:6px;
+      background:rgba(0,0,0,0.3);
+      border-radius:3px;
+      overflow:hidden;
+    }
+    .promo-progress-bar{
+      height:100%;
+      background:linear-gradient(90deg, var(--success) 0%, #34d399 100%);
+      transition:width .3s;
+    }
+    .promo-item.exhausted .promo-progress-bar{
+      background:linear-gradient(90deg, var(--danger) 0%, #f87171 100%);
+    }
+
+    .empty-state{text-align:center;padding:60px 20px;opacity:0.5}
+    .empty-icon{font-size:64px;margin-bottom:16px}
+    .empty-text{font-size:14px}
+
+    .nav{position:fixed;z-index:1000;left:0;right:0;bottom:0;background:rgba(26,26,36,0.95);backdrop-filter:blur(20px);padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(139,92,246,0.2);box-shadow:0 -8px 32px rgba(0,0,0,0.5)}
+    .nav-row{max-width:var(--wrap-max);margin:0 auto;display:flex;gap:10px;height:70px;align-items:center}
+    .tab{flex:1;text-align:center;padding:12px;border-radius:14px;background:rgba(0,0,0,0.3);color:var(--fg);font-weight:600;font-size:13px;cursor:pointer;user-select:none;transition:all 0.3s ease;border:1px solid transparent}
+    .tab.active{background:linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(59,130,246,0.3) 100%);border-color:rgba(139,92,246,0.5);box-shadow:0 4px 16px rgba(139,92,246,0.3)}
+    .tab:active{transform:scale(0.95)}
+
+    @media (max-width: 600px) {
+      .request-header{flex-direction:column}
+      .request-actions{flex-direction:row;width:100%}
+      .btn-small{flex:1}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>🔐 ADMIN PANEL</h1>
+      <p>Manage Withdrawals, Balances & Gifts</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="withdraw">💸 Withdrawals</button>
+      <button class="tab-btn" data-tab="history">📜 History</button>
+      <button class="tab-btn" data-tab="balance">💰 Add Balance</button>
+      <button class="tab-btn" data-tab="gift">🎁 Create Gift</button>
+    </div>
+
+    <!-- Withdraw Tab -->
+    <div class="tab-content active" id="withdrawTab">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="pendingCount">0</div>
+          <div class="stat-label">Pending Requests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="completedCount">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="rejectedCount">0</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+      </div>
+
+      <div class="section-title">⏳ Pending Requests</div>
+      <div id="pendingRequests">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">No pending withdrawal requests</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-content" id="historyTab">
+      <div class="section-title">📜 Withdrawal History</div>
+      <div id="withdrawHistory">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-text">No withdrawal history</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Balance Tab -->
+    <div class="tab-content" id="balanceTab">
+      <div class="form-card">
+        <div class="section-title">💎 Add TON Balance</div>
+        <div class="form-group">
+          <label class="form-label">User ID</label>
+          <input type="text" class="form-input" id="tonUserId" placeholder="Enter Telegram User ID">
+        </div>
+        <div class="form-group">
+          <label class="form-label">TON Amount</label>
+          <input type="number" class="form-input" id="tonAmount" placeholder="0.00" step="0.01">
+        </div>
+        <button class="btn" id="addTonBtn">➕ Add TON Balance</button>
+      </div>
+
+      <div class="form-card">
+        <div class="section-title">🐱 Add CATS Balance</div>
+        <div class="form-group">
+          <label class="form-label">User ID</label>
+          <input type="text" class="form-input" id="catsUserId" placeholder="Enter Telegram User ID">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CATS Amount</label>
+          <input type="number" class="form-input" id="catsAmount" placeholder="0" step="1">
+        </div>
+        <button class="btn" id="addCatsBtn">➕ Add CATS Balance</button>
+      </div>
+    </div>
+
+    <!-- Create Gift Tab -->
+    <div class="tab-content" id="giftTab">
+      <div class="form-card">
+        <div class="section-title">🎁 Create Gift Code</div>
+        <div class="form-group">
+          <label class="form-label">Total Budget (CATS)</label>
+          <input type="number" class="form-input" id="giftBudget" placeholder="e.g., 10000" min="100">
+          <div class="form-hint">Total CATS to distribute</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Max Uses (Users)</label>
+          <input type="number" class="form-input" id="giftMaxUses" placeholder="e.g., 100" min="1">
+          <div class="form-hint">How many users can claim this gift</div>
+        </div>
+
+        <div class="calc-box" id="rewardBox">
+          <span>Reward Per User:</span>
+          <strong id="rewardPerUser">0</strong>
+        </div>
+
+        <button class="btn" id="createGiftBtn">🎁 Generate & Create Gift</button>
+      </div>
+
+      <div class="form-card">
+        <div class="section-title">🎟️ Your Gift Codes</div>
+        <div id="giftListEmpty" style="font-size:13px;opacity:.7;text-align:center;padding:20px 0">No gift codes yet</div>
+        <div id="giftList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-row">
+      <div class="tab active" id="tabAdmin">🔐 Admin</div>
+      <div class="tab" id="tabEarn">💰 Earn</div>
+      <div class="tab" id="tabWatch">📺 Watch</div>
+    </div>
+  </div>
+
+  <script type="module">
+    const tg = window.Telegram && window.Telegram.WebApp;
+    try{
+      tg && tg.ready();
+      tg && tg.expand();
+      if(tg && tg.setHeaderColor) tg.setHeaderColor('secondary_bg_color');
+      if(tg && tg.setBackgroundColor) tg.setBackgroundColor('secondary_bg_color');
+    }catch(e){}
+
+    // Prevent bottom overlap
+    const navEl = document.querySelector('.nav');
+    function applyNavOffset(){
+      const h = navEl ? navEl.offsetHeight : 100;
+      document.documentElement.style.setProperty('--nav-offset', h + 'px');
+    }
+    applyNavOffset();
+    window.addEventListener('resize', applyNavOffset);
+
+    // Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
+    import {
+      getDatabase, ref, onValue, update, runTransaction, serverTimestamp, set, push
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVsbQ5GUkz5SIXy2Fp3Q6SPyv2peFhnK8",
+      authDomain: "moneys-cats-bot.firebaseapp.com",
+      databaseURL: "https://moneys-cats-bot-default-rtdb.firebaseio.com",
+      projectId: "moneys-cats-bot",
+      storageBucket: "moneys-cats-bot.firebasestorage.app",
+      messagingSenderId: "94689984727",
+      appId: "1:94689984727:web:d4ef7757c6521ac2733092",
+      measurementId: "G-B2D4Y2MQ5Z"
+    };
+    const app = initializeApp(firebaseConfig);
+    try { getAnalytics(app); } catch(e) {}
+    const db = getDatabase(app);
+
+    const toInt = (v,d=0) => Number.parseInt(v??d,10)||d;
+    const toFloat = (v,d=0) => Number.parseFloat(v??d)||d;
+
+    function toast(msg,ok=true){
+      try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(ok?'success':'error'); }catch(e){}
+      try{ if(tg && tg.showPopup){ tg.showPopup({title: ok?'✅ Success':'❌ Error', message: msg, buttons:[{type:'close'}]}); return; } }catch(e){}
+      alert(msg);
+    }
+
+    function copyToClipboard(text, successMsg = 'Copied!'){
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(()=>{
+          toast(successMsg);
+        }).catch(()=>{
+          fallbackCopy(text, successMsg);
+        });
+      } else {
+        fallbackCopy(text, successMsg);
+      }
+    }
+
+    function fallbackCopy(text, successMsg){
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try{
+        document.execCommand('copy');
+        toast(successMsg);
+      }catch(e){
+        toast('Could not copy', false);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const tab=btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tab+'Tab').classList.add('active');
+        applyNavOffset();
+      });
+    });
+
+    // Load all withdrawals
+    const withdrawalsRef = ref(db, 'withdrawals');
+    onValue(withdrawalsRef, (snap)=>{
+      const data = snap.val() || {};
+      let pending = [];
+      let completed = [];
+      let rejected = [];
+
+      Object.keys(data).forEach(uid => {
+        const userWithdrawals = data[uid];
+        Object.keys(userWithdrawals).forEach(wid => {
+          const w = userWithdrawals[wid];
+          const item = { ...w, uid, wid };
+          if(w.status === 'pending') pending.push(item);
+          else if(w.status === 'completed') completed.push(item);
+          else if(w.status === 'rejected') rejected.push(item);
+        });
+      });
+
+      // Sort by timestamp
+      pending.sort((a,b) => b.timestamp - a.timestamp);
+      completed.sort((a,b) => b.timestamp - a.timestamp);
+      rejected.sort((a,b) => b.timestamp - a.timestamp);
+
+      // Update stats
+      document.getElementById('pendingCount').textContent = pending.length;
+      document.getElementById('completedCount').textContent = completed.length;
+      document.getElementById('rejectedCount').textContent = rejected.length;
+
+      // Render pending requests
+      renderPendingRequests(pending);
+      renderHistory([...completed, ...rejected]);
+    });
+
+    function renderPendingRequests(requests){
+      const container = document.getElementById('pendingRequests');
+      if(requests.length === 0){
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">No pending withdrawal requests</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = requests.map(req => `
+        <div class="request-card">
+          <div class="request-header">
+            <div class="request-info">
+              <div class="request-user">👤 User ID: ${req.uid}</div>
+              <div class="request-address">📍 ${req.address}</div>
+              <div class="request-amount">-${req.amount.toLocaleString()} CATS (≈ ${req.ton_amount} TON)</div>
+              <div class="request-date">📅 ${new Date(req.timestamp).toLocaleString()}</div>
+            </div>
+            <div class="request-actions">
+              <button class="btn-small btn-approve" onclick="approveWithdrawal('${req.uid}', '${req.wid}')">✓ Approve</button>
+              <button class="btn-small btn-reject" onclick="rejectWithdrawal('${req.uid}', '${req.wid}', ${req.amount})">✗ Reject</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderHistory(history){
+      const container = document.getElementById('withdrawHistory');
+      if(history.length === 0){
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-text">No withdrawal history</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = history.map(item => {
+        const statusClass = item.status === 'completed' ? 'status-completed' : 'status-rejected';
+        const statusText = item.status === 'completed' ? '✅ Paid' : '❌ Rejected';
+        
+        return `
+          <div class="history-card">
+            <div class="history-row">
+              <div class="history-user">👤 User ID: ${item.uid}</div>
+              <div class="history-status ${statusClass}">${statusText}</div>
+            </div>
+            <div class="history-row">
+              <div class="history-amount">${item.amount.toLocaleString()} CATS (≈ ${item.ton_amount} TON)</div>
+              <div class="history-date">${new Date(item.timestamp).toLocaleString()}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Approve withdrawal
+    window.approveWithdrawal = async (uid, wid) => {
+      if(!confirm('Approve this withdrawal request?')) return;
+      try{
+        await update(ref(db, `withdrawals/${uid}/${wid}`), {
+          status: 'completed',
+          completed_at: serverTimestamp()
+        });
+        toast('✅ Withdrawal approved!');
+      }catch(e){
+        console.error(e);
+        toast('❌ Failed to approve withdrawal', false);
+      }
+    };
+
+    // Reject withdrawal (refund balance)
+    window.rejectWithdrawal = async (uid, wid, amount) => {
+      if(!confirm('Reject this withdrawal and refund balance?')) return;
+      try{
+        // Refund balance
+        await runTransaction(ref(db, `users/${uid}/balance`), (bal)=>{
+          bal = toInt(bal, 0);
+          return bal + amount;
+        });
+
+        // Update status
+        await update(ref(db, `withdrawals/${uid}/${wid}`), {
+          status: 'rejected',
+          rejected_at: serverTimestamp()
+        });
+
+        toast('✅ Withdrawal rejected and balance refunded!');
+      }catch(e){
+        console.error(e);
+        toast('❌ Failed to reject withdrawal', false);
+      }
+    };
+
+    // Add TON Balance
+    document.getElementById('addTonBtn').addEventListener('click', async ()=>{
+      const userId = document.getElementById('tonUserId').value.trim();
+      const amount = toFloat(document.getElementById('tonAmount').value, 0);
+
+      if(!userId){
+        toast('❌ Please enter User ID', false);
+        return;
+      }
+
+      if(amount <= 0){
+        toast('❌ Please enter valid TON amount', false);
+        return;
+      }
+
+      try{
+        await runTransaction(ref(db, `users/${userId}/ton_balance`), (bal)=>{
+          bal = toFloat(bal, 0);
+          return bal + amount;
+        });
+
+        document.getElementById('tonUserId').value = '';
+        document.getElementById('tonAmount').value = '';
+        toast(`✅ Added ${amount} TON to User ${userId}`);
+      }catch(e){
+        console.error(e);
+        toast('❌ Failed to add TON balance', false);
+      }
+    });
+
+    // Add CATS Balance
+    document.getElementById('addCatsBtn').addEventListener('click', async ()=>{
+      const userId = document.getElementById('catsUserId').value.trim();
+      const amount = toInt(document.getElementById('catsAmount').value, 0);
+
+      if(!userId){
+        toast('❌ Please enter User ID', false);
+        return;
+      }
+
+      if(amount <= 0){
+        toast('❌ Please enter valid CATS amount', false);
+        return;
+      }
+
+      try{
+        await runTransaction(ref(db, `users/${userId}/balance`), (bal)=>{
+          bal = toInt(bal, 0);
+          return bal + amount;
+        });
+
+        document.getElementById('catsUserId').value = '';
+        document.getElementById('catsAmount').value = '';
+        toast(`✅ Added ${amount.toLocaleString()} CATS to User ${userId}`);
+      }catch(e){
+        console.error(e);
+        toast('❌ Failed to add CATS balance', false);
+      }
+    });
+
+    // Gift Code System
+    const giftBudgetEl = document.getElementById('giftBudget');
+    const giftMaxUsesEl = document.getElementById('giftMaxUses');
+    const rewardPerUserEl = document.getElementById('rewardPerUser');
+    const createGiftBtn = document.getElementById('createGiftBtn');
+    const giftList = document.getElementById('giftList');
+    const giftListEmpty = document.getElementById('giftListEmpty');
+
+    // Calculate reward per user
+    function calculateReward(){
+      const budget = toInt(giftBudgetEl.value, 0);
+      const maxUses = toInt(giftMaxUsesEl.value, 0);
+      
+      if(budget > 0 && maxUses > 0){
+        const reward = Math.floor(budget / maxUses);
+        rewardPerUserEl.textContent = reward.toLocaleString() + ' CATS';
+      } else {
+        rewardPerUserEl.textContent = '0 CATS';
+      }
+    }
+
+    giftBudgetEl.addEventListener('input', calculateReward);
+    giftMaxUsesEl.addEventListener('input', calculateReward);
+
+    // Generate random gift code
+    function genGiftCode(len=10){
+      const chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let s='';
+      for(let i=0;i<len;i++){
+        s += chars[Math.floor(Math.random()*chars.length)];
+      }
+      return s;
+    }
+
+    // Create Gift Code
+    createGiftBtn.addEventListener('click', async ()=>{
+      const budget = toInt(giftBudgetEl.value, 0);
+      const maxUses = toInt(giftMaxUsesEl.value, 0);
+
+      if(budget < 100){
+        toast('❌ Budget must be at least 100 CATS', false);
+        return;
+      }
+
+      if(maxUses < 1){
+        toast('❌ Max uses must be at least 1', false);
+        return;
+      }
+
+      const rewardPerUser = Math.floor(budget / maxUses);
+
+      if(rewardPerUser < 10){
+        toast('❌ Reward per user must be at least 10 CATS', false);
+        return;
+      }
+
+      try{
+        const code = genGiftCode(10);
+        const giftRef = ref(db, `promos/${code}`);
+        
+        const data = {
+          owner_uid: 'ADMIN',
+          code,
+          reward_per_user: rewardPerUser,
+          max_uses: maxUses,
+          used_count: 0,
+          total_budget: budget,
+          active: true,
+          created_at: serverTimestamp()
+        };
+
+        await set(giftRef, data);
+        await set(ref(db, `admin_gifts/${code}`), true);
+
+        toast(`✅ Gift Created!\nCode: ${code}\nReward: ${rewardPerUser} CATS per user\nMax Uses: ${maxUses}`);
+
+        giftBudgetEl.value = '';
+        giftMaxUsesEl.value = '';
+        calculateReward();
+      }catch(e){
+        console.error(e);
+        toast('❌ Failed to create gift', false);
+      }
+    });
+
+    // Load Gift History
+    function loadGiftHistory(){
+      onValue(ref(db, 'admin_gifts'), (snap)=>{
+        giftList.innerHTML = '';
+        const map = snap.val() || {};
+        const codes = Object.keys(map);
+        
+        if(codes.length === 0){
+          giftListEmpty.style.display = 'block';
+          return;
+        }
+        
+        giftListEmpty.style.display = 'none';
+        
+        codes.forEach(code => {
+          onValue(ref(db, `promos/${code}`), (pSnap)=>{
+            const p = pSnap.val() || {};
+            const used = p.used_count || 0;
+            const max = p.max_uses || 0;
+            const avail = Math.max(0, max - used);
+            const isExhausted = avail === 0;
+            const progress = max > 0 ? (used / max) * 100 : 0;
+
+            // Remove old item if exists
+            const oldItem = giftList.querySelector(`[data-gift-code="${code}"]`);
+            if(oldItem) oldItem.remove();
+
+            const item = document.createElement('div');
+            item.className = `promo-item ${isExhausted ? 'exhausted' : ''}`;
+            item.setAttribute('data-gift-code', code);
+            
+            item.innerHTML = `
+              <div class="promo-header">
+                <div class="promo-code-wrapper">
+                  <div class="promo-code">${code}</div>
+                  <button class="copy-btn" data-code="${code}">📋 Copy</button>
+                </div>
+                <span class="promo-status ${isExhausted ? 'exhausted' : 'active'}">
+                  ${isExhausted ? '🔴 Exhausted' : '🟢 Active'}
+                </span>
+              </div>
+              <div class="promo-stats">
+                <div class="promo-stat">
+                  <div class="promo-stat-label">Available</div>
+                  <div class="promo-stat-value">${avail}</div>
+                </div>
+                <div class="promo-stat">
+                  <div class="promo-stat-label">Claimed</div>
+                  <div class="promo-stat-value">${used}/${max}</div>
+                </div>
+                <div class="promo-stat">
+                  <div class="promo-stat-label">Reward/User</div>
+                  <div class="promo-stat-value">${p.reward_per_user||0} 🐱</div>
+                </div>
+                <div class="promo-stat">
+                  <div class="promo-stat-label">Total Budget</div>
+                  <div class="promo-stat-value">${p.total_budget||0} 🐱</div>
+                </div>
+              </div>
+              <div class="promo-progress">
+                <div class="promo-progress-bar" style="width:${progress}%"></div>
+              </div>
+            `;
+            
+            giftList.appendChild(item);
+
+            // Add copy button event
+            const copyBtn = item.querySelector('.copy-btn');
+            copyBtn.addEventListener('click', ()=> {
+              copyToClipboard(code, `Gift code "${code}" copied!`);
+            });
+          });
+        });
+      });
+    }
+
+    loadGiftHistory();
+
+    // Navigation
+    document.getElementById('tabAdmin').addEventListener('click',()=>{});
+    document.getElementById('tabEarn').addEventListener('click',()=>{ location.href='index.html'; });
+    document.getElementById('tabWatch').addEventListener('click',()=>{ location.href='watch.html'; });
+  </script>
+</body>
+</html>
